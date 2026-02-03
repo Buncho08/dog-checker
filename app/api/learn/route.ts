@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { createEmbedder } from "../../../lib/embedding/embedder";
 import { insertSample } from "../../../lib/db";
 import { isLabel } from "../../../lib/utils/validators";
+import type { Label } from "../../../lib/config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ const embedder = createEmbedder();
 const processEmbeddingInBackground = async (
 	id: string,
 	buffer: Buffer,
-	label: string,
+	label: Label,
 ) => {
 	try {
 		const { embedding, version } = await embedder.embed(buffer);
@@ -68,14 +69,15 @@ export async function POST(req: Request) {
 
 		const id = randomUUID();
 		const buffer = Buffer.from(await image.arrayBuffer());
+		const label = labelRaw as Label;
 
 		// 推論を非同期で実行し、即座にレスポンスを返す
-		void processEmbeddingInBackground(id, buffer, labelRaw);
+		void processEmbeddingInBackground(id, buffer, label);
 
 		return NextResponse.json(
 			{
 				id,
-				label: labelRaw,
+				label,
 				status: "processing",
 				message: "Learning in progress",
 			},
