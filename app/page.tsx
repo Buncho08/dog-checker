@@ -10,6 +10,7 @@ type RandomAnimal = { animal: string; url: string };
 
 export default function Home() {
 	const [current, setCurrent] = useState<RandomAnimal | null>(null);
+	const [imageCache, setImageCache] = useState<File | null>(null);
 	const [message, setMessage] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [loadingImage, setLoadingImage] = useState(true);
@@ -33,15 +34,19 @@ export default function Home() {
 	const loadRandom = useCallback(async () => {
 		setError(null);
 		setLoadingImage(true);
+		setImageCache(null);
 		try {
 			const data = await fetchJson<RandomAnimal>("/api/animal/random");
 			setCurrent(data);
+			// 画像を事前にキャッシュ
+			const file = await loadImageAsFile(data.url);
+			setImageCache(file);
 		} catch (err) {
 			setError((err as Error).message ?? "ランダム取得に失敗しました");
 		} finally {
 			setLoadingImage(false);
 		}
-	}, [fetchJson]);
+	}, [fetchJson, loadImageAsFile]);
 
 	useEffect(() => {
 		void loadRandom();
@@ -57,15 +62,14 @@ export default function Home() {
 	}, [message]);
 
 	const handleLabel = useCallback(async (label: "DOG" | "NOT_DOG") => {
-		if (!current) return;
+		if (!current || !imageCache) return;
 		setSubmitting(true);
 		setMessage(null);
 		setError(null);
 		try {
-			const file = await loadImageAsFile(current.url);
 			const form = new FormData();
 			form.set("label", label);
-			form.set("image", file);
+			form.set("image", imageCache);
 			const res = await fetch("/api/learn", { method: "POST", body: form });
 			if (!res.ok) throw new Error(`学習API失敗: ${res.status}`);
 			const data = await res.json();
@@ -76,7 +80,7 @@ export default function Home() {
 		} finally {
 			setSubmitting(false);
 		}
-	}, [current, loadImageAsFile, loadRandom]);
+	}, [current, imageCache, loadRandom]);
 
 	return (
 		<main className="rounded-2xl w-full max-w-xl md:max-w-2xl lg:max-w-3xl min-h-[85vh] bg-amber-50 p-3 md:p-6">
