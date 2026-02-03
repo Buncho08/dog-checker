@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export function OPTIONS() {
 	return new NextResponse(null, { status: 204, headers: corsHeaders });
@@ -20,6 +21,8 @@ export async function GET() {
 			headers: {
 				...corsHeaders,
 				'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+				'Pragma': 'no-cache',
+				'Expires': '0',
 			},
 		});
 	} catch (err) {

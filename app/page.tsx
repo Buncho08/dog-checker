@@ -36,7 +36,8 @@ export default function Home() {
 		setLoadingImage(true);
 		setImageCache(null);
 		try {
-			const data = await fetchJson<RandomAnimal>("/api/animal/random");
+			const cacheBuster = Date.now();
+			const data = await fetchJson<RandomAnimal>(`/api/animal/random?t=${cacheBuster}`);
 			setCurrent(data);
 			// 画像を事前にキャッシュ
 			const file = await loadImageAsFile(data.url);
