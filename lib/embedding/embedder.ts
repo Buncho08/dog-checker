@@ -108,6 +108,12 @@ export class OnnxEmbedder implements Embedder {
 	private modelSource = DEFAULT_MODEL_PATH;
 	private initPromise: Promise<void> | null = null;
 
+	private resolveThreadCount(): number {
+		const parsed = Number(process.env.EMBEDDER_THREADS ?? "4");
+		if (Number.isFinite(parsed) && parsed > 0) return Math.floor(parsed);
+		return 4;
+	}
+
 	private resolveWasmBase(): string {
 		const custom =
 			process.env.EMBEDDER_WASM_BASE_URL ?? process.env.EMBEDDER_WASM_PATH;
@@ -147,9 +153,10 @@ export class OnnxEmbedder implements Embedder {
 
 		// Node.js環境でonnxruntime-webを使用するためのWASMパス設定
 		ort.env.wasm.wasmPaths = this.resolveWasmBase();
-		// サーバーサイドなのでSIMDとマルチスレッドを無効化（互換性のため）
-		ort.env.wasm.numThreads = 1;
-		ort.env.wasm.simd = false;
+		// SIMD/マルチスレッドを有効化し推論を高速化
+		ort.env.wasm.numThreads = this.resolveThreadCount();
+		ort.env.wasm.simd = process.env.EMBEDDER_SIMD === "false" ? false : true;
+		ort.env.wasm.proxy = false;
 
 		this.initialized = true;
 	}

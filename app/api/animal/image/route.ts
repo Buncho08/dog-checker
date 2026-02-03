@@ -72,7 +72,9 @@ export async function GET(req: Request) {
 			headers: {
 				...corsHeaders,
 				"Content-Type": contentType,
-				"Cache-Control": "private, max-age=60",
+				"Cache-Control":
+					"public, max-age=3600, stale-while-revalidate=86400",
+				"CDN-Cache-Control": "public, max-age=86400, stale-while-revalidate=86400",
 			},
 		});
 	} catch (err) {

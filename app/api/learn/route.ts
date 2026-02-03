@@ -21,6 +21,26 @@ export function OPTIONS() {
 
 const embedder = createEmbedder();
 
+// 推論はバックグラウンドで行い、UIの待ち時間を減らす
+const processEmbeddingInBackground = async (
+	id: string,
+	buffer: Buffer,
+	label: string,
+) => {
+	try {
+		const { embedding, version } = await embedder.embed(buffer);
+		await insertSample({
+			id,
+			label,
+			embedding,
+			embedderVersion: version,
+		});
+		console.info("learn_background_complete", { id, label, version });
+	} catch (err) {
+		console.error("learn_background_failed", { id, err });
+	}
+};
+
 export async function POST(req: Request) {
 	try {
 		const formData = await req.formData();
@@ -46,22 +66,18 @@ export async function POST(req: Request) {
 			);
 		}
 
-		const buffer = Buffer.from(await image.arrayBuffer());
-		const { embedding, version } = await embedder.embed(buffer);
-
 		const id = randomUUID();
-		await insertSample({
-			id,
-			label: labelRaw,
-			embedding,
-			embedderVersion: version,
-		});
+		const buffer = Buffer.from(await image.arrayBuffer());
+
+		// 推論を非同期で実行し、即座にレスポンスを返す
+		void processEmbeddingInBackground(id, buffer, labelRaw);
 
 		return NextResponse.json(
 			{
 				id,
 				label: labelRaw,
-				embedderVersion: version,
+				status: "processing",
+				message: "Learning in progress",
 			},
 			{ headers: corsHeaders },
 		);
