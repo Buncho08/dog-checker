@@ -177,6 +177,10 @@ export class OnnxEmbedder implements Embedder {
 		try {
 			await this.initializeSession();
 
+			if (!this.session) {
+				throw new Error("Session initialization failed");
+			}
+
 			// ImageNet標準の前処理: 短辺を256pxにリサイズ（アスペクト比維持）→ 中心から224x224を切り出し
 			const { data, info } = await sharp(image)
 				.resize(RESIZE_SIZE, RESIZE_SIZE, {
