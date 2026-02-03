@@ -7,6 +7,8 @@ const corsHeaders = {
 	"Access-Control-Allow-Headers": "Content-Type",
 };
 
+export const dynamic = "force-dynamic";
+
 export function OPTIONS() {
 	return new NextResponse(null, { status: 204, headers: corsHeaders });
 }
@@ -17,7 +19,7 @@ export async function GET() {
 		return NextResponse.json(result, {
 			headers: {
 				...corsHeaders,
-				'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+				'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
 			},
 		});
 	} catch (err) {
