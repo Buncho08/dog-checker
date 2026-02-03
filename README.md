@@ -1,61 +1,7 @@
 # Dog Checker API
 
-Node.js 20 LTS で動作する画像分類API（DOG/NOT_DOG判定）のMVP実装。機械学習の再学習は行わず、固定の埋め込みベクトル抽出 + kNN近傍検索で推論します。
-
-## 特徴
-
-- **学習API**: 画像とラベル（DOG/NOT_DOG）を受け取り、埋め込みベクトル化してSQLiteに保存
-- **推論API**: 画像を受け取り、kNN近傍検索でラベルを予測（DOG/NOT_DOG/UNKNOWN）
-- **統計API**: 学習済みデータ件数を取得
-- **Phase 0**: ダミー埋め込み（SHA-256ベース、128次元）で動作確認済み
-- **Phase 1**: ONNX Runtime Web + MobileNetV2（ImageNet事前学習済み、特徴ベクトル抽出）に切り替え可能
-- **Vercel対応**: WASMベースのためサーバーレス環境でも動作
-
-## Phase 1への移行（ONNX Runtime Web）
-
-### 1. 依存インストール
-
-```bash
-npm install onnxruntime-web sharp
-npm install -D @types/sharp
-# WASMファイルは自動的にpublic/wasm/にコピーされます（postinstallフック）
-```
-
-### 2. モデルファイル準備
-
-```bash
-mkdir -p data/models
-cd data/models
-wget https://github.com/onnx/models/raw/main/vision/classification/mobilenet/model/mobilenetv2-10.onnx
-cd ../..
-```
-
-### 3. ONNX有効化
-
-`.env` で `USE_ONNX=true` に変更し、サーバー再起動。
-
-```bash
-# .env
-USE_ONNX=true
-```
-
-埋め込み出力はモデルの出力名から自動選択されます。特徴出力があるモデルの利用を推奨し、
-必要に応じて `EMBEDDING_OUTPUT_NAME` で出力名を明示してください。
-
-## セットアップ
-
-```bash
-# 依存インストール
-npm install
-
-# 環境変数設定（必要なら編集）
-cp .env.example .env
-
-# 開発サーバー起動
-npm run dev
-```
-
-サーバーは `http://localhost:3000` で起動します。
+Node.js 20 LTS で動作する画像分類API（DOG/NOT_DOG判定）
+固定の埋め込みベクトル抽出 + kNN近傍検索で推論します。
 
 ## 環境変数（.env）
 
@@ -72,59 +18,6 @@ UNSPLASH_ACCESS_KEY=     # Unsplash API Key（動物画像取得用、オプシ�
 
 ## Vercelデプロイ
 
-### 事前準備
-
-1. **環境変数の設定**
-   Vercelダッシュボードで以下を設定：
-   - `DATABASE_URL`: Vercel Postgresの接続文字列
-   - `USE_ONNX`: `true`（ONNX使用時）
-   - `ALLOWED_ORIGINS`: 本番ドメイン（例：`https://yourdomain.com`）
-   - `UNSPLASH_ACCESS_KEY`: Unsplash APIキー（オプション）
-
-2. **ONNX Runtime Webの対応**
-   - ✅ WASMベースのためVercel Serverless Functionsでネイティブに動作
-   - 本番環境で`USE_ONNX=true`を設定可能
-   - モデルファイル（mobilenetv2-10.onnx、約14MB）を`data/models/`に配置
-   - 初回起動時にWASMランタイムが初期化されます
-
-3. **タイムアウト設定**
-   - 無料プランは10秒制限
-   - Pro/Enterpriseプランで`vercel.json`の`maxDuration: 30`が有効
-
-### セキュリティの注意事項
-
-- **画像サイズ制限**: 最大10MB
-- **SSRF対策**: 外部画像取得はHTTPSのみ、プライベートIP拒否
-- **CORS**: 本番環境では`ALLOWED_ORIGINS`を特定ドメインに設定
-- **レート制限**: 高トラフィック時はUpstash Redisなどでレート制限を実装推奨
-- **サンプル数**: 10万件超過時は応答時間が遅延する可能性あり
-
-### デプロイコマンド
-
-```bash
-# Vercel CLIでデプロイ
-npm install -g vercel
-vercel
-```
-
-## API仕様
-
-### POST /api/learn
-
-画像とラベルを受け取り、学習データとして保存します。
-
-```bash
-curl -F "image=@./image/dog.png" -F "label=DOG" http://localhost:3000/api/learn
-# {"id":"uuid","label":"DOG","embedderVersion":"dummy-v1"}
-
-curl -F "image=@./image/cat.png" -F "label=NOT_DOG" http://localhost:3000/api/learn
-# {"id":"uuid","label":"NOT_DOG","embedderVersion":"dummy-v1"}
-```
-
-- **Request**: `multipart/form-data`
-  - `image` (file): 画像ファイル
-  - `label` (string): `DOG` または `NOT_DOG`
-- **Response**: `{ id: string, label: string, embedderVersion: string }`
 
 ### POST /api/predict
 
@@ -197,12 +90,3 @@ tests/
   similarity.test.ts     # kNN/cosineの単体テスト
 ```
 
-## 設計方針
-
-- **最小構成**: レイヤー分けを最小限に、DIコンテナ/Repository抽象/DDD等は使用しない
-- **型安全**: TypeScript strict mode、any禁止
-- **拡張性**: embedder層を分離し、将来ONNX実装へ差し替え可能
-- **シンプル**: 1ファイル200行以内、エラー処理は最低限（400/500）
-
-# dog_checker
-# dog-checker
