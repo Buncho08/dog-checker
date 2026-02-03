@@ -1,0 +1,79 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+type Sample = {
+	id: string;
+	label: "DOG" | "NOT_DOG";
+	embedderVersion: string;
+	createdAt: string;
+};
+
+export default function SamplesPage() {
+	const [samples, setSamples] = useState<Sample[]>([]);
+	const [error, setError] = useState<string | null>(null);
+	const [loading, setLoading] = useState(true);
+
+	useEffect(() => {
+		const fetchSamples = async () => {
+			try {
+				const res = await fetch("/api/samples");
+				if (!res.ok) throw new Error(`Failed: ${res.status}`);
+				const data = (await res.json()) as Sample[];
+				setSamples(data);
+			} catch (err) {
+				setError((err as Error).message ?? "エラー");
+			} finally {
+				setLoading(false);
+			}
+		};
+		void fetchSamples();
+	}, []);
+
+	return (
+		<main className="rounded-2xl min-w-1/3 max-w-1/3 max-h-[90%] overflow-y-scroll bg-amber-50 p-2">
+			<div>
+				<h1 className="text-7xl text-center p-3">サンプル一覧</h1>
+				<p className="text-center">保存済みの学習データを確認できます</p>
+				<div className="flex justify-around h-20 items-center">
+					<a className="link hover:text-amber-500" href="/">
+						学習ページへ
+					</a>
+					<a className="link hover:text-amber-500" href="/check">
+						判定ページへ
+					</a>
+				</div>
+			</div>
+
+			<div className="p-4">
+				{loading && <p className="text-center text-gray-500">読み込み中...</p>}
+				{error && <p className="text-center text-red-500">{error}</p>}
+				{!loading && !error && (
+					<div className="space-y-3">
+						{samples.length === 0 && <p className="text-center text-gray-500">データがありません</p>}
+						{samples.map((s) => (
+							<div key={s.id} className="bg-white rounded-lg p-4 shadow-md border-2 border-gray-200">
+								<div className="flex items-center justify-between">
+									<span className={`px-3 py-1 rounded-full text-sm font-semibold ${s.label === "DOG" ? "bg-yellow-300 text-black" : "bg-sky-300 text-black"}`}>
+										{s.label === "DOG" ? "いぬ" : "いぬじゃない"}
+									</span>
+									<p className="text-xs text-gray-500">{new Date(s.createdAt).toLocaleString("ja-JP")}</p>
+								</div>
+								<p className="text-sm text-gray-700 mt-2 font-mono">ID: {s.id}</p>
+								<p className="text-xs text-gray-500 font-mono">Version: {s.embedderVersion}</p>
+							</div>
+						))}
+					</div>
+				)}
+			</div>
+
+			<div className="flex justify-center p-4">
+				<a href="/">
+					<button type="button" className="relative border-black px-5 py-3 font-semibold text-sm text-black after:absolute after:inset-x-0 after:bottom-0 z-0 after:h-1 after:bg-yellow-300 hover:text-black hover:after:h-full focus:ring-2 focus:ring-yellow-300 focus:outline-0">
+						<span className="relative z-10">トップに戻る</span>
+					</button>
+				</a>
+			</div>
+		</main>
+	);
+}
