@@ -11,8 +11,7 @@ const ResultModal = dynamic(() => import("../components/modal/ResultModal"), { s
 
 export default function CheckPage() {
 	const [file, setFile] = useState<File | null>(null);
-	const dummyResult: PredictResponse = { label: "DOG", score: 0.95, pDog: 0.9, neighbors: [{ id: "sample1", label: "DOG", sim: 0.98 }], sampleCount: 1000, embedderVersion: "1.0.0" };
-	const [result, setResult] = useState<PredictResponse | null>(dummyResult);
+	const [result, setResult] = useState<PredictResponse | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -63,7 +62,7 @@ export default function CheckPage() {
 	const label = { DOG: "いぬ", NOT_DOG: "いぬじゃない", UNKNOWN: "わからない" };
 	return (
 		<main className="rounded-2xl w-full max-w-xl md:max-w-2xl lg:max-w-3xl min-h-[85vh] bg-amber-50 p-3 md:p-6">
-			{loading ?? <Loading />}
+			{loading && <Loading />}
 			<h1 className="text-4xl md:text-5xl lg:text-7xl text-center p-2 md:p-3">これはいぬ？</h1>
 			<p className="text-sm md:text-base text-center">ばんさんのかわりに判断します</p>
 			<div className="flex flex-col sm:flex-row justify-around gap-3 sm:gap-0 py-4 md:h-20 items-center">
@@ -96,12 +95,30 @@ export default function CheckPage() {
 					type="file"
 					accept="image/*"
 					className="sr-only"
-					onChange={(e) => { setFile(e.target.files?.[0] ?? null); onSubmit(e); }}
+					onChange={async (e) => {
+						const selectedFile = e.target.files?.[0] ?? null;
+						setFile(selectedFile);
+						if (!selectedFile) {
+							setError("画像ファイルを選択してください");
+							return;
+						}
+						setError(null);
+						setResult(null);
+						setLoading(true);
+						try {
+							const resp = await postImage<PredictResponse>("/api/predict", selectedFile);
+							setResult(resp);
+						} catch (err) {
+							setError((err as Error).message ?? "エラーが発生しました");
+						} finally {
+							setLoading(false);
+						}
+					}}
 				/>
 				{error && <p className="error">{error}</p>}
 			</label>
 
-			{result && (
+			{result !== null && (
 				<section className="card flex-col justify-center mt-4 p-3 md:p-4">
 					<h2 className="text-4xl md:text-5xl lg:text-7xl text-center font-extrabold">{label[result.label]}</h2>
 					<div className="flex justify-center items-center my-2"><a onClick={() => setModal(true)} className="relative text-xs md:text-sm border-black px-4 md:px-5 py-2 font-semibold text-black after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:bg-black hover:text-white hover:after:h-full focus:ring-2 focus:ring-yellow-300 focus:outline-0" href="#">
