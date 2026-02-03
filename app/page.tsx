@@ -107,7 +107,7 @@ export default function Home() {
 				<div className="w-full">
 					<div className="grid grid-cols-1 sm:grid-cols-2 grid-rows-3 sm:grid-rows-2 gap-3 m-2 md:m-3 p-2 md:p-3">
 						<div className="rounded-2xl">
-							<button type="button" className="group relative inline-block w-full" onClick={() => handleLabel("NOT_DOG")} disabled={!current || submitting || loadingImage}>
+							<button type="button" className="group relative inline-block w-full" onClick={() => handleLabel("DOG")} disabled={!current || submitting || loadingImage}>
 								<span className="absolute inset-0 translate-x-0 translate-y-0 w-full bg-yellow-300 transition-transform group-hover:translate-x-1.5 group-hover:translate-y-1.5"></span>
 
 								<span className="relative inline-block border-2 border-current w-full px-4 md:px-8 py-3 text-xs md:text-sm font-bold tracking-widest uppercase">
