@@ -1,21 +1,11 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import Loading from "../components/modal/Loading";
+import { FormEvent, useEffect, useMemo, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { PredictResponse } from "../type/PredictResponse";
-import ResultModal from "../components/modal/ResultModal";
 
-
-
-const postImage = async <T,>(url: string, file: File): Promise<T> => {
-	const form = new FormData();
-	form.set("image", file);
-	const res = await fetch(url, { method: "POST", body: form });
-	if (!res.ok) {
-		throw new Error(`Request failed: ${res.status}`);
-	}
-	return (await res.json()) as T;
-};
+const Loading = dynamic(() => import("../components/modal/Loading"), { ssr: false });
+const ResultModal = dynamic(() => import("../components/modal/ResultModal"), { ssr: false });
 
 
 
@@ -27,6 +17,16 @@ export default function CheckPage() {
 	const [loading, setLoading] = useState(false);
 	const [imageUrl, setImageUrl] = useState<string | null>(null);
 	const [modal, setModal] = useState<boolean>(false);
+
+	const postImage = useCallback(async <T,>(url: string, file: File): Promise<T> => {
+		const form = new FormData();
+		form.set("image", file);
+		const res = await fetch(url, { method: "POST", body: form });
+		if (!res.ok) {
+			throw new Error(`Request failed: ${res.status}`);
+		}
+		return (await res.json()) as T;
+	}, []);
 
 	useEffect(() => {
 		if (file) {
@@ -40,7 +40,7 @@ export default function CheckPage() {
 		}
 	}, [file]);
 
-	const onSubmit = async (e: FormEvent) => {
+	const onSubmit = useCallback(async (e: FormEvent) => {
 		e.preventDefault();
 		setError(null);
 		setResult(null);
@@ -57,7 +57,7 @@ export default function CheckPage() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [file, postImage]);
 
 	const topNeighbor = useMemo(() => result?.neighbors?.[0], [result]);
 	const label = { DOG: "いぬ", NOT_DOG: "いぬじゃない", UNKNOWN: "わからない" };

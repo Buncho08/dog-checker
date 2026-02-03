@@ -24,7 +24,12 @@ export async function GET() {
 				embedderVersion: s.embedderVersion,
 				createdAt: new Date(s.createdAt).toISOString(),
 			})),
-			{ headers: corsHeaders },
+			{
+				headers: {
+					...corsHeaders,
+					'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=30',
+				},
+			},
 		);
 	} catch (err) {
 		console.error(err);

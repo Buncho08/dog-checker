@@ -1,25 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import Loading from "./components/modal/Loading";
-import Notify from "./components/modal/Notify";
+import { useCallback, useEffect, useState, useMemo } from "react";
+import dynamic from "next/dynamic";
+
+const Loading = dynamic(() => import("./components/modal/Loading"), { ssr: false });
+const Notify = dynamic(() => import("./components/modal/Notify"), { ssr: false });
 
 type RandomAnimal = { animal: string; url: string };
-
-const fetchJson = async <T,>(url: string): Promise<T> => {
-	const res = await fetch(url);
-	if (!res.ok) throw new Error(`Failed to fetch ${url}`);
-	return (await res.json()) as T;
-};
-
-const loadImageAsFile = async (url: string): Promise<File> => {
-	const proxyUrl = `/api/animal/image?url=${encodeURIComponent(url)}`;
-	const res = await fetch(proxyUrl);
-	if (!res.ok) throw new Error(`画像取得に失敗しました (${res.status})`);
-	const blob = await res.blob();
-	const ext = blob.type.split("/")[1] ?? "jpg";
-	return new File([blob], `random.${ext}`, { type: blob.type || "image/jpeg" });
-};
 
 export default function Home() {
 	const [current, setCurrent] = useState<RandomAnimal | null>(null);
@@ -27,6 +14,21 @@ export default function Home() {
 	const [error, setError] = useState<string | null>(null);
 	const [loadingImage, setLoadingImage] = useState(true);
 	const [submitting, setSubmitting] = useState(false);
+
+	const fetchJson = useCallback(async <T,>(url: string): Promise<T> => {
+		const res = await fetch(url);
+		if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+		return (await res.json()) as T;
+	}, []);
+
+	const loadImageAsFile = useCallback(async (url: string): Promise<File> => {
+		const proxyUrl = `/api/animal/image?url=${encodeURIComponent(url)}`;
+		const res = await fetch(proxyUrl);
+		if (!res.ok) throw new Error(`画像取得に失敗しました (${res.status})`);
+		const blob = await res.blob();
+		const ext = blob.type.split("/")[1] ?? "jpg";
+		return new File([blob], `random.${ext}`, { type: blob.type || "image/jpeg" });
+	}, []);
 
 	const loadRandom = useCallback(async () => {
 		setError(null);
@@ -39,7 +41,7 @@ export default function Home() {
 		} finally {
 			setLoadingImage(false);
 		}
-	}, []);
+	}, [fetchJson]);
 
 	useEffect(() => {
 		void loadRandom();
@@ -54,7 +56,7 @@ export default function Home() {
 		}
 	}, [message]);
 
-	const handleLabel = async (label: "DOG" | "NOT_DOG") => {
+	const handleLabel = useCallback(async (label: "DOG" | "NOT_DOG") => {
 		if (!current) return;
 		setSubmitting(true);
 		setMessage(null);
@@ -74,7 +76,7 @@ export default function Home() {
 		} finally {
 			setSubmitting(false);
 		}
-	};
+	}, [current, loadImageAsFile, loadRandom]);
 
 	return (
 		<main className="rounded-2xl w-full max-w-xl md:max-w-2xl lg:max-w-3xl min-h-[85vh] bg-amber-50 p-3 md:p-6">

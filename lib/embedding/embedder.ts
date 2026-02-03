@@ -106,6 +106,7 @@ export class OnnxEmbedder implements Embedder {
 	private initialized = false;
 	private modelBuffer: Uint8Array | null = null;
 	private modelSource = DEFAULT_MODEL_PATH;
+	private initPromise: Promise<void> | null = null;
 
 	private resolveWasmBase(): string {
 		const custom =
@@ -153,16 +154,28 @@ export class OnnxEmbedder implements Embedder {
 		this.initialized = true;
 	}
 
+	private async initializeSession(): Promise<void> {
+		if (this.session) return;
+
+		// 初期化プロミスを再利用して並列リクエストでの重複初期化を防ぐ
+		if (this.initPromise) {
+			return this.initPromise;
+		}
+
+		this.initPromise = (async () => {
+			await this.initializeWasm();
+			const modelBuffer = await this.loadModelBuffer();
+			this.session = await ort.InferenceSession.create(modelBuffer, {
+				executionProviders: ["wasm"],
+			});
+		})();
+
+		return this.initPromise;
+	}
+
 	async embed(image: Buffer): Promise<EmbedderResult> {
 		try {
-			await this.initializeWasm();
-
-			if (!this.session) {
-				const modelBuffer = await this.loadModelBuffer();
-				this.session = await ort.InferenceSession.create(modelBuffer, {
-					executionProviders: ["wasm"],
-				});
-			}
+			await this.initializeSession();
 
 			// ImageNet標準の前処理: 短辺を256pxにリサイズ（アスペクト比維持）→ 中心から224x224を切り出し
 			const { data, info } = await sharp(image)
