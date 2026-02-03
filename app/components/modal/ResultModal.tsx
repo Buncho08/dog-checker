@@ -10,29 +10,29 @@ export default function ResultModal(props: ModalProps) {
     const label = { DOG: "いぬ", NOT_DOG: "いぬじゃない", UNKNOWN: "わからない" };
 
     return (<div className="bg-white/80 top-0 bottom-0 left-0 right-0 m-auto absolute z-10 flex justify-center items-center">
-        <div className="fixed inset-0 z-50 grid place-content-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+        <div className="fixed inset-0 z-50 grid place-content-center bg-black/50 p-2 md:p-4" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <div className="w-full max-w-xs sm:max-w-md rounded-lg bg-white p-4 md:p-6 shadow-lg max-h-[90vh] overflow-y-auto">
                 <div className="flex items-start justify-between">
-                    <h2 id="modalTitle" className="text-xl font-bold text-gray-900 sm:text-2xl">これは…{label[props.result.label]}</h2>
+                    <h2 id="modalTitle" className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900">これは…{label[props.result.label]}</h2>
 
-                    <button type="button" onClick={props.onClose} className="-me-4 -mt-4 rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600 focus:outline-none" aria-label="Close">
+                    <button type="button" onClick={props.onClose} className="-me-2 md:-me-4 -mt-2 md:-mt-4 rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600 focus:outline-none" aria-label="Close">
                         <svg xmlns="http://www.w3.org/2000/svg" className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
 
-                <div className="mt-4">
-                    <p className="text-pretty text-gray-700">
+                <div className="mt-3 md:mt-4">
+                    <p className="text-sm md:text-pretty text-gray-700">
                         判定モデル: {props.result.embedderVersion}
                     </p>
-                    <p className="text-pretty text-gray-700">
+                    <p className="text-sm md:text-pretty text-gray-700">
                         スコア: {toPercent(props.result.score)}
                     </p>
-                    <p className="text-pretty text-gray-700">
+                    <p className="text-sm md:text-pretty text-gray-700">
                         いぬである確率: {toPercent(props.result.pDog)}
                     </p>
-                    <p className="text-pretty text-gray-700">
+                    <p className="text-sm md:text-pretty text-gray-700">
                         総学習データ件数: {props.result.sampleCount}
                     </p>
                     {props.result.params && (

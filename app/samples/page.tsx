@@ -31,15 +31,15 @@ export default function SamplesPage() {
 	}, []);
 
 	return (
-		<main className="rounded-2xl min-w-1/3 max-w-1/3 max-h-[90%] overflow-y-scroll bg-amber-50 p-2">
+		<main className="rounded-2xl w-full max-w-xl md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-y-scroll bg-amber-50 p-3 md:p-6">
 			<div>
-				<h1 className="text-7xl text-center p-3">サンプル一覧</h1>
-				<p className="text-center">保存済みの学習データを確認できます</p>
-				<div className="flex justify-around h-20 items-center">
-					<a className="link hover:text-amber-500" href="/">
+				<h1 className="text-4xl md:text-5xl lg:text-7xl text-center p-2 md:p-3">サンプル一覧</h1>
+				<p className="text-sm md:text-base text-center">保存済みの学習データを確認できます</p>
+				<div className="flex flex-col sm:flex-row justify-around gap-3 sm:gap-0 py-4 md:h-20 items-center">
+					<a className="link hover:text-amber-500 text-sm md:text-base" href="/">
 						学習ページへ
 					</a>
-					<a className="link hover:text-amber-500" href="/check">
+					<a className="link hover:text-amber-500 text-sm md:text-base" href="/check">
 						判定ページへ
 					</a>
 				</div>
@@ -67,9 +67,9 @@ export default function SamplesPage() {
 				)}
 			</div>
 
-			<div className="flex justify-center p-4">
+			<div className="flex justify-center p-3 md:p-4">
 				<a href="/">
-					<button type="button" className="relative border-black px-5 py-3 font-semibold text-sm text-black after:absolute after:inset-x-0 after:bottom-0 z-0 after:h-1 after:bg-yellow-300 hover:text-black hover:after:h-full focus:ring-2 focus:ring-yellow-300 focus:outline-0">
+					<button type="button" className="relative border-black px-4 md:px-5 py-2 md:py-3 font-semibold text-xs md:text-sm text-black after:absolute after:inset-x-0 after:bottom-0 z-0 after:h-1 after:bg-yellow-300 hover:text-black hover:after:h-full focus:ring-2 focus:ring-yellow-300 focus:outline-0">
 						<span className="relative z-10">トップに戻る</span>
 					</button>
 				</a>

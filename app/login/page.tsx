@@ -32,10 +32,10 @@ const LoginPage = () => {
 	};
 
 	return (
-		<main className="rounded-2xl bg-amber-50 p-8 w-full max-w-md shadow-[8px_8px_0_0] shadow-amber-200 border-2 border-black">
-			<div className="text-center mb-8">
-				<h1 className="text-6xl font-bold p-3">ログイン</h1>
-				<p className="text-center text-gray-700">パスワードはディスコをみてね</p>
+		<main className="rounded-2xl bg-amber-50 p-4 md:p-8 w-full max-w-md mx-4 shadow-[8px_8px_0_0] shadow-amber-200 border-2 border-black">
+			<div className="text-center mb-6 md:mb-8">
+				<h1 className="text-4xl md:text-6xl font-bold p-2 md:p-3">ログイン</h1>
+				<p className="text-center text-sm md:text-base text-gray-700">パスワードはディスコをみてね</p>
 			</div>
 
 			<form onSubmit={handleSubmit} className="space-y-6">
@@ -67,7 +67,7 @@ const LoginPage = () => {
 					className="group relative inline-block w-full disabled:opacity-50 disabled:cursor-not-allowed"
 				>
 					<span className="absolute inset-0 translate-x-0 translate-y-0 w-full bg-yellow-300 transition-transform group-hover:translate-x-1.5 group-hover:translate-y-1.5 group-disabled:translate-x-0 group-disabled:translate-y-0"></span>
-					<span className="relative inline-block border-2 border-current w-full px-8 py-3 text-sm font-bold tracking-widest uppercase bg-white">
+					<span className="relative inline-block border-2 border-current w-full px-4 md:px-8 py-3 text-xs md:text-sm font-bold tracking-widest uppercase bg-white">
 						{loading ? "送信中..." : "ログイン"}
 					</span>
 				</button>

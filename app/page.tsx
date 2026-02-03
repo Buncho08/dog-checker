@@ -77,53 +77,53 @@ export default function Home() {
 	};
 
 	return (
-		<main className="rounded-2xl min-w-1/4 max-w-1/4 min-h-5/6 bg-amber-50 p-2">
+		<main className="rounded-2xl w-full max-w-xl md:max-w-2xl lg:max-w-3xl min-h-[85vh] bg-amber-50 p-3 md:p-6">
 			{(loadingImage || submitting) && <Loading />}
 			<div className="">
 				<div className="">
 					<div>
-						<h1 className="text-7xl text-center p-3">これはいぬ？</h1>
-						<p className="text-center">ばんさんに近づくための特訓をします</p>
+						<h1 className="text-4xl md:text-5xl lg:text-7xl text-center p-2 md:p-3">これはいぬ？</h1>
+						<p className="text-sm md:text-base text-center">ばんさんに近づくための特訓をします</p>
 					</div>
-					<div className="flex justify-around h-20 items-center">
-						<a className="link hover:text-amber-500" href="/check">
+					<div className="flex flex-col sm:flex-row justify-around gap-3 sm:gap-0 py-4 md:h-20 items-center">
+						<a className="link hover:text-amber-500 text-sm md:text-base" href="/check">
 							判定ページへ
 						</a>
-						<a className="link hover:text-amber-500" href="/samples">
+						<a className="link hover:text-amber-500 text-sm md:text-base" href="/samples">
 							サンプル一覧
 						</a>
 					</div>
 				</div>
 
-				<div className="flex justify-center items-center h-96 w-full p-4">
+				<div className="flex justify-center items-center h-64 md:h-80 lg:h-96 w-full p-2 md:p-4">
 					{loadingImage ? <p className="muted"></p> : current ? (<figure>
-						<img src={current.url} alt={current.animal} className="h-96 w-full rounded-2xl" />
+						<img src={current.url} alt={current.animal} className="h-64 md:h-80 lg:h-96 w-full object-cover rounded-2xl" />
 						{/* <figcaption className="muted text-center text-gray-500">{current.animal}</figcaption> */}
 					</figure>) : (<p className="text-red-500">画像を取得できませんでした</p>)}
 				</div>
 
 				<div className="w-full">
-					<div className="grid grid-cols-2 grid-rows-2 h-36 m-3 justify-center items-center gap-3 p-3">
-						<div className="h-16 rounded-2xl col-start-1">
+					<div className="grid grid-cols-1 sm:grid-cols-2 grid-rows-3 sm:grid-rows-2 gap-3 m-2 md:m-3 p-2 md:p-3">
+						<div className="rounded-2xl">
 							<button type="button" className="group relative inline-block w-full" onClick={() => handleLabel("NOT_DOG")} disabled={!current || submitting || loadingImage}>
 								<span className="absolute inset-0 translate-x-0 translate-y-0 w-full bg-yellow-300 transition-transform group-hover:translate-x-1.5 group-hover:translate-y-1.5"></span>
 
-								<span className="relative inline-block border-2 border-current w-full px-8 py-3 text-sm font-bold tracking-widest uppercase">
+								<span className="relative inline-block border-2 border-current w-full px-4 md:px-8 py-3 text-xs md:text-sm font-bold tracking-widest uppercase">
 									いぬ
 								</span>
 							</button>
 						</div>
-						<div className="h-16 rounded-2xl col-start-2">
+						<div className="rounded-2xl">
 							<button type="button" className="group relative inline-block w-full" onClick={() => handleLabel("NOT_DOG")} disabled={!current || submitting || loadingImage}>
 								<span className="absolute inset-0 translate-x-0 translate-y-0 w-full bg-sky-300 transition-transform group-hover:translate-x-1.5 group-hover:translate-y-1.5"></span>
 
-								<span className="relative inline-block border-2 border-current w-full px-8 py-3 text-sm font-bold tracking-widest uppercase">
+								<span className="relative inline-block border-2 border-current w-full px-4 md:px-8 py-3 text-xs md:text-sm font-bold tracking-widest uppercase">
 									いぬじゃない
 								</span>
 							</button>
 						</div>
-						<div className="col-start-1 col-end-3 flex justify-center">
-							<button onClick={loadRandom} disabled={loadingImage || submitting} type="button" className="relative border-black px-5 py-3 font-semibold text-sm text-black after:absolute after:inset-x-0 after:bottom-0 z-0 after:h-1 after:bg-yellow-300 hover:text-black hover:after:h-full focus:ring-2 focus:ring-yellow-300 focus:outline-0">
+						<div className="sm:col-start-1 sm:col-end-3 flex justify-center">
+							<button onClick={loadRandom} disabled={loadingImage || submitting} type="button" className="relative border-black px-4 md:px-5 py-2 md:py-3 font-semibold text-xs md:text-sm text-black after:absolute after:inset-x-0 after:bottom-0 z-0 after:h-1 after:bg-yellow-300 hover:text-black hover:after:h-full focus:ring-2 focus:ring-yellow-300 focus:outline-0">
 								<span className="relative z-10"> 別の画像をみる </span>
 							</button>
 						</div>
