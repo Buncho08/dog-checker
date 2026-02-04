@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { createEmbedder } from "../../../lib/embedding/embedder";
 import { insertSample } from "../../../lib/db";
 import { isLabel } from "../../../lib/utils/validators";
+import type { Label } from "../../../lib/config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +21,26 @@ export function OPTIONS() {
 }
 
 const embedder = createEmbedder();
+
+// 推論はバックグラウンドで行い、UIの待ち時間を減らす
+const processEmbeddingInBackground = async (
+	id: string,
+	buffer: Buffer,
+	label: Label,
+) => {
+	try {
+		const { embedding, version } = await embedder.embed(buffer);
+		await insertSample({
+			id,
+			label,
+			embedding,
+			embedderVersion: version,
+		});
+		console.info("learn_background_complete", { id, label, version });
+	} catch (err) {
+		console.error("learn_background_failed", { id, err });
+	}
+};
 
 export async function POST(req: Request) {
 	try {
@@ -46,22 +67,19 @@ export async function POST(req: Request) {
 			);
 		}
 
-		const buffer = Buffer.from(await image.arrayBuffer());
-		const { embedding, version } = await embedder.embed(buffer);
-
 		const id = randomUUID();
-		await insertSample({
-			id,
-			label: labelRaw,
-			embedding,
-			embedderVersion: version,
-		});
+		const buffer = Buffer.from(await image.arrayBuffer());
+		const label = labelRaw as Label;
+
+		// 推論を非同期で実行し、即座にレスポンスを返す
+		void processEmbeddingInBackground(id, buffer, label);
 
 		return NextResponse.json(
 			{
 				id,
-				label: labelRaw,
-				embedderVersion: version,
+				label,
+				status: "processing",
+				message: "Learning in progress",
 			},
 			{ headers: corsHeaders },
 		);

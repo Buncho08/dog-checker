@@ -63,16 +63,6 @@ export const fox = async () => {
 };
 
 /**
- * Get a random image of a lizard!
- *
- */
-export const lizard = async () => {
-	return getRequest<{ url: string }>(
-		"https://nekos.life/api/v2/img/lizard",
-	).then((res) => res.url);
-};
-
-/**
  * get a random placeholder image
  */
 export const randomPlaceholder = async () => {
@@ -85,7 +75,7 @@ export const randomPlaceholder = async () => {
 	).then((res) => res.urls.small);
 };
 
-export type AnimalApiName = "cat" | "dog" | "bunny" | "duck" | "fox" | "lizard" | "randomPlaceholder";
+export type AnimalApiName = "cat" | "dog" | "bunny" | "duck" | "fox" | "randomPlaceholder";
 
 type AnimalApiEntry = {
 	name: AnimalApiName;
@@ -98,7 +88,6 @@ const animalApis: AnimalApiEntry[] = [
 	{ name: "bunny", fetcher: bunny },
 	{ name: "duck", fetcher: duck },
 	{ name: "fox", fetcher: fox },
-	{ name: "lizard", fetcher: lizard },
 	{ name: "randomPlaceholder", fetcher: randomPlaceholder },
 ];
 
