@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 export const metadata = {
@@ -11,7 +12,10 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="ja" className="h-screen">
-      <body className="h-full bg-amber-300 flex justify-center items-center relative">{children}</body>
+      <body className="h-full bg-amber-300 flex justify-center items-center relative">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
