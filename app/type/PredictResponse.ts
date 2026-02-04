@@ -1,7 +1,7 @@
-export type Neighbor = { id: string; label: "DOG" | "NOT_DOG"; sim: number };
+export type Neighbor = { id: string; label: string; sim: number };
 
 export type PredictResponse = {
-    label: "DOG" | "NOT_DOG" | "UNKNOWN";
+    label: string;
     score: number;
     pDog: number;
     neighbors: Neighbor[];

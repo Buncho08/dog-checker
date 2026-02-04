@@ -22,6 +22,7 @@ export async function GET() {
 				id: s.id,
 				label: s.label,
 				embedderVersion: s.embedderVersion,
+				imageUrl: s.imageUrl ?? null,
 				createdAt: new Date(s.createdAt).toISOString(),
 			})),
 			{

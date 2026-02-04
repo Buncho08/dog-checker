@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 
 type Sample = {
 	id: string;
-	label: "DOG" | "NOT_DOG";
+	label: string;
 	embedderVersion: string;
+	imageUrl: string | null;
 	createdAt: string;
 };
 
@@ -54,11 +55,18 @@ export default function SamplesPage() {
 						{samples.map((s) => (
 							<div key={s.id} className="bg-white rounded-lg p-4 shadow-md border-2 border-gray-200">
 								<div className="flex items-center justify-between">
-									<span className={`px-3 py-1 rounded-full text-sm font-semibold ${s.label === "DOG" ? "bg-yellow-300 text-black" : "bg-sky-300 text-black"}`}>
-										{s.label === "DOG" ? "いぬ" : "いぬじゃない"}
+									<span className={`px-3 py-1 rounded-full text-sm font-semibold ${s.label === "DOG" ? "bg-yellow-300 text-black" : s.label === "NOT_DOG" ? "bg-sky-300 text-black" : "bg-purple-300 text-black"}`}>
+										{s.label === "DOG" ? "いぬ" : s.label === "NOT_DOG" ? "いぬじゃない" : s.label}
 									</span>
 									<p className="text-xs text-gray-500">{new Date(s.createdAt).toLocaleString("ja-JP")}</p>
 								</div>
+								{s.imageUrl && (
+									<div className="mt-3">
+										<a href={s.imageUrl} target="_blank" rel="noopener noreferrer">
+											<img src={s.imageUrl} alt={s.label} className="w-full h-48 object-cover rounded-lg hover:opacity-80 transition-opacity cursor-pointer" />
+										</a>
+									</div>
+								)}
 								<p className="text-sm text-gray-700 mt-2 font-mono">ID: {s.id}</p>
 								<p className="text-xs text-gray-500 font-mono">Version: {s.embedderVersion}</p>
 							</div>

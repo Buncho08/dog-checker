@@ -9,15 +9,38 @@ interface LearnModalProps {
 }
 
 export default function LearnModal({ open, onClose, onSubmit }: LearnModalProps) {
-    const [learnLabel, setLearnLabel] = useState<"DOG" | "NOT_DOG" | "CUSTOM">("DOG");
-    const [customLabel, setCustomLabel] = useState<string>("");
+    const [existingLabels, setExistingLabels] = useState<string[]>([]);
+    const [selectedLabel, setSelectedLabel] = useState<string>("");
+    const [isNewLabel, setIsNewLabel] = useState(false);
+    const [newLabel, setNewLabel] = useState<string>("");
     const [submitting, setSubmitting] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    // 既存ラベルを取得
+    useEffect(() => {
+        if (open) {
+            setLoading(true);
+            fetch("/api/labels")
+                .then((res) => res.json())
+                .then((data: { labels: string[] }) => {
+                    setExistingLabels(data.labels);
+                    if (data.labels.length > 0) {
+                        setSelectedLabel(data.labels[0]);
+                    }
+                })
+                .catch((err) => {
+                    console.error("Failed to fetch labels:", err);
+                    setExistingLabels([]);
+                })
+                .finally(() => setLoading(false));
+        }
+    }, [open]);
 
     // モーダルが開かれるたびに状態をリセット
     useEffect(() => {
         if (open) {
-            setLearnLabel("DOG");
-            setCustomLabel("");
+            setIsNewLabel(false);
+            setNewLabel("");
             setSubmitting(false);
         }
     }, [open]);
@@ -25,7 +48,10 @@ export default function LearnModal({ open, onClose, onSubmit }: LearnModalProps)
     const handleSubmit = async () => {
         setSubmitting(true);
         try {
-            const labelToSend = learnLabel === "CUSTOM" ? customLabel : learnLabel;
+            const labelToSend = isNewLabel ? newLabel.trim() : selectedLabel;
+            if (!labelToSend) {
+                return;
+            }
             await onSubmit(labelToSend);
         } finally {
             setSubmitting(false);
@@ -33,6 +59,12 @@ export default function LearnModal({ open, onClose, onSubmit }: LearnModalProps)
     };
 
     if (!open) return null;
+
+    const labelMap: Record<string, string> = {
+        DOG: "いぬ",
+        NOT_DOG: "いぬじゃない"
+    };
+    const getDisplayLabel = (label: string) => labelMap[label] || label;
 
     return (
         <div
@@ -44,57 +76,66 @@ export default function LearnModal({ open, onClose, onSubmit }: LearnModalProps)
                 onClick={(e) => e.stopPropagation()}
             >
                 <h3 className="text-xl font-bold mb-4">学習データとして登録</h3>
-                <div className="space-y-3 mb-6">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="radio"
-                            name="learnLabel"
-                            value="DOG"
-                            checked={learnLabel === "DOG"}
-                            onChange={(e) => setLearnLabel(e.target.value as "DOG")}
-                            className="w-4 h-4"
-                        />
-                        <span className="text-lg">いぬ</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="radio"
-                            name="learnLabel"
-                            value="NOT_DOG"
-                            checked={learnLabel === "NOT_DOG"}
-                            onChange={(e) => setLearnLabel(e.target.value as "NOT_DOG")}
-                            className="w-4 h-4"
-                        />
-                        <span className="text-lg">いぬじゃない</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="radio"
-                            name="learnLabel"
-                            value="CUSTOM"
-                            checked={learnLabel === "CUSTOM"}
-                            onChange={(e) => setLearnLabel(e.target.value as "CUSTOM")}
-                            className="w-4 h-4"
-                        />
-                        <span className="text-lg">
+
+                {loading ? (
+                    <div className="text-center py-4 text-gray-500">読み込み中...</div>
+                ) : (
+                    <div className="space-y-4 mb-6">
+                        {existingLabels.length > 0 && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    既存のラベルから選択
+                                </label>
+                                <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded p-3">
+                                    {existingLabels.map((label) => (
+                                        <label key={label} className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="labelChoice"
+                                                value={label}
+                                                checked={!isNewLabel && selectedLabel === label}
+                                                onChange={() => {
+                                                    setIsNewLabel(false);
+                                                    setSelectedLabel(label);
+                                                }}
+                                                className="w-4 h-4"
+                                            />
+                                            <span className="text-sm">{getDisplayLabel(label)}</span>
+                                        </label>
+                                    ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                    <input
+                                        type="radio"
+                                        name="labelChoice"
+                                        checked={isNewLabel}
+                                        onChange={() => setIsNewLabel(true)}
+                                        className="w-4 h-4"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700">新しいラベルを追加</span>
+                                </label>
                             <input
                                 type="text"
-                                value={customLabel}
+                                    value={newLabel}
                                 onChange={(e) => {
                                     const value = e.target.value;
                                     if ([...value].length <= 5) {
-                                        setCustomLabel(value);
+                                        setNewLabel(value);
                                     }
                                 }}
-                                onFocus={() => setLearnLabel("CUSTOM")}
-                                disabled={learnLabel !== "CUSTOM"}
-                                placeholder="例: ねこ、CATなど"
+                                    onFocus={() => setIsNewLabel(true)}
+                                    disabled={!isNewLabel}
+                                    placeholder="例: ねこ、CAT、🐱など（最大5文字）"
                                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                            />
-                        </span>
-                    </label>
+                                />
+                            </div>
+                    </div>
+                )}
 
-                </div>
                 <div className="flex gap-3 justify-end">
                     <button
                         onClick={onClose}
@@ -105,7 +146,7 @@ export default function LearnModal({ open, onClose, onSubmit }: LearnModalProps)
                     </button>
                     <button
                         onClick={handleSubmit}
-                        disabled={submitting || (learnLabel === "CUSTOM" && customLabel.trim().length === 0)}
+                        disabled={submitting || loading || (isNewLabel && newLabel.trim().length === 0) || (!isNewLabel && !selectedLabel)}
                         className="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                     >
                         {submitting ? "登録中..." : "登録"}
