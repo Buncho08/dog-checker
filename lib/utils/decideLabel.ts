@@ -15,6 +15,7 @@ export interface DecisionResult {
 	pDog: number; // 後方互換性のため維持（選択されたラベルの確率を返す）
 	topSim: number;
 	labelProbs?: Record<string, number>; // 各ラベルの確率分布（デバッグ用）
+	bestLabel?: string; // 確率が最も高いラベル（finalLabelがUNKNOWNの場合に参照）
 }
 
 /**
@@ -114,5 +115,6 @@ export const decideLabel = (
 		pDog,
 		topSim,
 		labelProbs,
+		bestLabel: finalLabel === "UNKNOWN" ? bestLabel : undefined,
 	};
 };

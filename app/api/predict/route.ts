@@ -91,6 +91,7 @@ export async function POST(req: Request) {
 				embedderVersion: version,
 				sampleCount: samples.length,
 				params: runtimeParams,
+				bestLabel: decision.bestLabel,
 			},
 			{ headers: corsHeaders },
 		);
