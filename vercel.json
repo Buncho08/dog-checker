@@ -1,17 +1,18 @@
 {
-	"buildCommand": "npm run build",
-	"functions": {
-		"app/api/predict/route.ts": {
-			"maxDuration": 30
-		},
-		"app/api/learn/route.ts": {
-			"maxDuration": 30
-		},
-		"app/api/evaluate/route.ts": {
-			"maxDuration": 30
-		}
-	},
-	"env": {
-		"NODE_VERSION": "20"
-	}
+  "buildCommand": "npm run build",
+  "functions": {
+    "app/api/predict/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/learn/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/evaluate/route.ts": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "NODE_VERSION": "20"
+  },
+  "regions": ["hnd1"]
 }
