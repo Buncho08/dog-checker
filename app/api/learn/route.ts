@@ -62,7 +62,7 @@ export async function POST(req: Request) {
 		}
 		if (typeof labelRaw !== "string" || !isLabel(labelRaw)) {
 			return NextResponse.json(
-				{ error: "label must be DOG or NOT_DOG" },
+				{ error: "label must be DOG, NOT_DOG, or custom (1-5 characters)" },
 				{ status: 400, headers: corsHeaders },
 			);
 		}

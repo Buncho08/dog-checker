@@ -7,17 +7,18 @@ export type ModalProps = {
 };
 export default function ResultModal(props: ModalProps) {
     const toPercent = (v: number) => `${Math.round(v * 100)}%`;
-    const label = { DOG: "いぬ", NOT_DOG: "いぬじゃない", UNKNOWN: "わからない" };
+    const labelMap: Record<string, string> = { DOG: "いぬ", NOT_DOG: "いぬじゃない", UNKNOWN: "わからない" };
+    const getDisplayLabel = (label: string) => labelMap[label] || label;
 
     return (<div className="bg-white/80 top-0 bottom-0 left-0 right-0 m-auto absolute z-10 flex justify-center items-center">
         <div className="fixed inset-0 z-50 grid place-content-center bg-black/50 p-2 md:p-4" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
             <div className="w-full max-w-xs sm:max-w-md rounded-lg bg-white p-4 md:p-6 shadow-lg max-h-[90vh] overflow-y-auto">
                 <div className="flex items-start justify-between">
-                    <h2 id="modalTitle" className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900">これは…{label[props.result.label]}</h2>
+                    <h2 id="modalTitle" className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900">これは…{getDisplayLabel(props.result.label)}</h2>
 
                     <button type="button" onClick={props.onClose} className="-me-2 md:-me-4 -mt-2 md:-mt-4 rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600 focus:outline-none" aria-label="Close">
                         <svg xmlns="http://www.w3.org/2000/svg" className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            <path strokeLinecap="round" strokeLinejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
@@ -35,6 +36,21 @@ export default function ResultModal(props: ModalProps) {
                     <p className="text-sm md:text-pretty text-gray-700">
                         総学習データ件数: {props.result.sampleCount}
                     </p>
+                    {props.result.neighbors && props.result.neighbors.length > 0 && (
+                        <div className="mt-3 rounded border border-gray-200 bg-gray-50 p-3">
+                            <p className="text-sm font-semibold text-gray-700 mb-2">近傍データ（上位{props.result.neighbors.length}件）</p>
+                            <div className="space-y-2">
+                                {props.result.neighbors.map((neighbor, idx) => (
+                                    <div key={neighbor.id} className="text-xs bg-white rounded border border-gray-200 p-2">
+                                        <p className="font-medium text-gray-800">
+                                            {idx + 1}. {getDisplayLabel(neighbor.label)} (類似度: {toPercent(neighbor.sim)})
+                                        </p>
+                                        <p className="text-gray-500 mt-1 font-mono text-[10px] truncate">ID: {neighbor.id}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     {props.result.params && (
                         <div className="mt-3 rounded border border-gray-200 bg-gray-50 p-3">
                             <p className="text-sm font-semibold text-gray-700 mb-2">判定パラメータ</p>
@@ -60,7 +76,7 @@ export default function ResultModal(props: ModalProps) {
                                     <span className="text-xs">データ</span>
 
                                     <svg className="size-3 shrink-0 group-open:-rotate-180" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        <path strokeLinecap="round" strokeLinejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                     </svg>
                                 </summary>
 
