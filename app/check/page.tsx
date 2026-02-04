@@ -3,9 +3,11 @@
 import { FormEvent, useEffect, useMemo, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { PredictResponse } from "../type/PredictResponse";
+import VoteButtons from "../components/VoteButtons";
 
 const Loading = dynamic(() => import("../components/modal/Loading"), { ssr: false });
 const ResultModal = dynamic(() => import("../components/modal/ResultModal"), { ssr: false });
+const LearnModal = dynamic(() => import("../components/modal/LearnModal"), { ssr: false });
 
 
 
@@ -16,6 +18,8 @@ export default function CheckPage() {
 	const [loading, setLoading] = useState(false);
 	const [imageUrl, setImageUrl] = useState<string | null>(null);
 	const [modal, setModal] = useState<boolean>(false);
+	const [showLearnModal, setShowLearnModal] = useState<boolean>(false);
+	const [learnSuccess, setLearnSuccess] = useState<boolean>(false);
 
 	const postImage = useCallback(async <T,>(url: string, file: File): Promise<T> => {
 		const form = new FormData();
@@ -58,8 +62,31 @@ export default function CheckPage() {
 		}
 	}, [file, postImage]);
 
+	const handleLearnSubmit = useCallback(async (label: string) => {
+		if (!file) return;
+		setLoading(true);
+		setError(null);
+		try {
+			const form = new FormData();
+			form.set("image", file);
+			form.set("label", label);
+			const res = await fetch("/api/learn", { method: "POST", body: form });
+			if (!res.ok) {
+				throw new Error(`登録失敗: ${res.status}`);
+			}
+			setLearnSuccess(true);
+			setShowLearnModal(false);
+		} catch (err) {
+			setError((err as Error).message ?? "学習データ登録エラー");
+			throw err;
+		} finally {
+			setLoading(false);
+		}
+	}, [file]);
+
 	const topNeighbor = useMemo(() => result?.neighbors?.[0], [result]);
-	const label = { DOG: "いぬ", NOT_DOG: "いぬじゃない", UNKNOWN: "わからない" };
+	const labelMap: Record<string, string> = { DOG: "いぬ", NOT_DOG: "いぬじゃない", UNKNOWN: "わからない" };
+	const getDisplayLabel = (label: string) => labelMap[label] || label;
 	return (
 		<main className="rounded-2xl w-full max-w-xl md:max-w-2xl lg:max-w-3xl min-h-[85vh] bg-amber-50 p-3 md:p-6">
 			{loading && <Loading />}
@@ -83,7 +110,7 @@ export default function CheckPage() {
 				) : (
 					<>
 							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-8 md:size-10">
-								<path strokeLinecap="round" stroke-linejoin="round" d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m0-3-3-3m0 0-3 3m3-3v11.25m6-2.25h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75"></path>
+								<path strokeLinecap="round" strokeLinejoin="round" d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m0-3-3-3m0 0-3 3m3-3v11.25m6-2.25h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75"></path>
 						</svg>
 							<span className="mt-2 md:mt-4 font-medium text-sm md:text-base dark:text-white"> ばんAIに聞いてみよう！ </span>
 					</>
@@ -120,11 +147,26 @@ export default function CheckPage() {
 
 			{result !== null && (
 				<section className="card flex-col justify-center mt-4 p-3 md:p-4">
-					<h2 className="text-4xl md:text-5xl lg:text-7xl text-center font-extrabold">{label[result.label]}</h2>
-					<div className="flex justify-center items-center my-2"><a onClick={() => setModal(true)} className="relative text-xs md:text-sm border-black px-4 md:px-5 py-2 font-semibold text-black after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:bg-black hover:text-white hover:after:h-full focus:ring-2 focus:ring-yellow-300 focus:outline-0" href="#">
-						<span className="relative z-10"> くわしくみる </span>
-					</a></div>
+					<h2 className="text-4xl md:text-5xl lg:text-7xl text-center font-extrabold">{getDisplayLabel(result.label)}</h2>
+
+					<div className="flex justify-center items-center gap-3 my-2">
+						<a onClick={() => setModal(true)} className="relative text-xs md:text-sm border-black px-4 md:px-5 py-2 font-semibold text-black after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:bg-black hover:text-white hover:after:h-full focus:ring-2 focus:ring-yellow-300 focus:outline-0" href="#">
+							<span className="relative z-10"> くわしくみる </span>
+						</a>
+						<button onClick={() => setShowLearnModal(true)} className="relative text-xs md:text-sm border-green-600 bg-green-50 px-4 md:px-5 py-2 font-semibold text-green-700 after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:bg-green-600 hover:text-white hover:after:h-full focus:ring-2 focus:ring-green-300 focus:outline-0">
+							<span className="relative z-10"> 学習データに登録 </span>
+						</button>
+					</div>
+					{learnSuccess && <p className="text-center text-green-600 mt-2 text-sm">✓ 学習データに登録しました</p>}
 					{modal && <ResultModal result={result} topNeighbor={topNeighbor!} open={modal} onClose={() => setModal(false)} />}
+					<LearnModal
+						open={showLearnModal}
+						onClose={() => setShowLearnModal(false)}
+						onSubmit={handleLearnSubmit}
+					/>
+
+					{/* 投票ボタン */}
+					{topNeighbor && <VoteButtons sampleId={topNeighbor.id} className="my-3" />}
 				</section>
 			)}
 		</main>

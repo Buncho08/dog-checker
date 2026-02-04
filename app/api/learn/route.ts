@@ -27,6 +27,7 @@ const processEmbeddingInBackground = async (
 	id: string,
 	buffer: Buffer,
 	label: Label,
+	imageUrl?: string,
 ) => {
 	try {
 		const { embedding, version } = await embedder.embed(buffer);
@@ -35,6 +36,7 @@ const processEmbeddingInBackground = async (
 			label,
 			embedding,
 			embedderVersion: version,
+			imageUrl: imageUrl ?? null,
 		});
 		console.info("learn_background_complete", { id, label, version });
 	} catch (err) {
@@ -47,6 +49,7 @@ export async function POST(req: Request) {
 		const formData = await req.formData();
 		const image = formData.get("image");
 		const labelRaw = formData.get("label");
+		const imageUrl = formData.get("imageUrl");
 
 		if (!(image instanceof File)) {
 			return NextResponse.json(
@@ -62,7 +65,7 @@ export async function POST(req: Request) {
 		}
 		if (typeof labelRaw !== "string" || !isLabel(labelRaw)) {
 			return NextResponse.json(
-				{ error: "label must be DOG or NOT_DOG" },
+				{ error: "label must be DOG, NOT_DOG, or custom (1-5 characters)" },
 				{ status: 400, headers: corsHeaders },
 			);
 		}
@@ -70,9 +73,10 @@ export async function POST(req: Request) {
 		const id = randomUUID();
 		const buffer = Buffer.from(await image.arrayBuffer());
 		const label = labelRaw as Label;
+		const url = typeof imageUrl === "string" && imageUrl.length > 0 ? imageUrl : undefined;
 
 		// 推論を非同期で実行し、即座にレスポンスを返す
-		void processEmbeddingInBackground(id, buffer, label);
+		void processEmbeddingInBackground(id, buffer, label, url);
 
 		return NextResponse.json(
 			{

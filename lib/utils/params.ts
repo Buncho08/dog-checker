@@ -61,5 +61,9 @@ export const deriveRuntimeParams = (
 			parseNumberParam(params.get("minNeighbors")),
 			config.minNeighbors,
 		),
+		minMargin: clamp01(
+			parseNumberParam(params.get("minMargin")) ?? config.minMargin,
+			config.minMargin,
+		),
 	};
 };

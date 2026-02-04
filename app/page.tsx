@@ -71,6 +71,7 @@ export default function Home() {
 			const form = new FormData();
 			form.set("label", label);
 			form.set("image", imageCache);
+			form.set("imageUrl", current.url);
 			const res = await fetch("/api/learn", { method: "POST", body: form });
 			if (!res.ok) throw new Error(`学習API失敗: ${res.status}`);
 			const data = await res.json();
