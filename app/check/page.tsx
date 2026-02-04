@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { PredictResponse } from "../type/PredictResponse";
+import VoteButtons from "../components/VoteButtons";
 
 const Loading = dynamic(() => import("../components/modal/Loading"), { ssr: false });
 const ResultModal = dynamic(() => import("../components/modal/ResultModal"), { ssr: false });
@@ -147,6 +148,7 @@ export default function CheckPage() {
 			{result !== null && (
 				<section className="card flex-col justify-center mt-4 p-3 md:p-4">
 					<h2 className="text-4xl md:text-5xl lg:text-7xl text-center font-extrabold">{getDisplayLabel(result.label)}</h2>
+
 					<div className="flex justify-center items-center gap-3 my-2">
 						<a onClick={() => setModal(true)} className="relative text-xs md:text-sm border-black px-4 md:px-5 py-2 font-semibold text-black after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:bg-black hover:text-white hover:after:h-full focus:ring-2 focus:ring-yellow-300 focus:outline-0" href="#">
 							<span className="relative z-10"> くわしくみる </span>
@@ -162,6 +164,9 @@ export default function CheckPage() {
 						onClose={() => setShowLearnModal(false)}
 						onSubmit={handleLearnSubmit}
 					/>
+
+					{/* 投票ボタン */}
+					{topNeighbor && <VoteButtons sampleId={topNeighbor.id} className="my-3" />}
 				</section>
 			)}
 		</main>

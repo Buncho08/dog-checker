@@ -1,11 +1,63 @@
 import { PredictResponse, Neighbor } from "../../type/PredictResponse";
+import { useState, useEffect } from "react";
+
 export type ModalProps = {
     result: PredictResponse;
     topNeighbor: Neighbor;
     open: boolean;
     onClose: () => void;
 };
+
+type VoteState = {
+    [sampleId: string]: { score: number; userVote: number | null };
+};
+
 export default function ResultModal(props: ModalProps) {
+    const [votes, setVotes] = useState<VoteState>({});
+    const [voting, setVoting] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (props.open && props.result.neighbors) {
+            // 各近傍サンプルの投票情報を取得
+            props.result.neighbors.forEach(async (neighbor) => {
+                try {
+                    const res = await fetch(`/api/votes?sampleId=${neighbor.id}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setVotes(prev => ({
+                            ...prev,
+                            [neighbor.id]: { score: data.score, userVote: data.userVote }
+                        }));
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch vote:", err);
+                }
+            });
+        }
+    }, [props.open, props.result.neighbors]);
+
+    const handleVote = async (sampleId: string, vote: 1 | -1) => {
+        setVoting(sampleId);
+        try {
+            const res = await fetch("/api/votes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sampleId, vote }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setVotes(prev => ({
+                    ...prev,
+                    [sampleId]: { score: data.score, userVote: data.userVote }
+                }));
+            }
+        } catch (err) {
+            console.error("Failed to vote:", err);
+        } finally {
+            setVoting(null);
+        }
+    };
+
     const toPercent = (v: number) => `${Math.round(v * 100)}%`;
     const labelMap: Record<string, string> = { DOG: "いぬ", NOT_DOG: "いぬじゃない", UNKNOWN: "わからない" };
     const getDisplayLabel = (label: string) => labelMap[label] || label;
@@ -40,14 +92,51 @@ export default function ResultModal(props: ModalProps) {
                         <div className="mt-3 rounded border border-gray-200 bg-gray-50 p-3">
                             <p className="text-sm font-semibold text-gray-700 mb-2">近傍データ（上位{props.result.neighbors.length}件）</p>
                             <div className="space-y-2">
-                                {props.result.neighbors.map((neighbor, idx) => (
-                                    <div key={neighbor.id} className="text-xs bg-white rounded border border-gray-200 p-2">
-                                        <p className="font-medium text-gray-800">
-                                            {idx + 1}. {getDisplayLabel(neighbor.label)} (類似度: {toPercent(neighbor.sim)})
-                                        </p>
-                                        <p className="text-gray-500 mt-1 font-mono text-[10px] truncate">ID: {neighbor.id}</p>
-                                    </div>
-                                ))}
+                                {props.result.neighbors.map((neighbor, idx) => {
+                                    const voteData = votes[neighbor.id];
+                                    const isVoting = voting === neighbor.id;
+                                    return (
+                                        <div key={neighbor.id} className="text-xs bg-white rounded border border-gray-200 p-2">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <p className="font-medium text-gray-800">
+                                                        {idx + 1}. {getDisplayLabel(neighbor.label)} (類似度: {toPercent(neighbor.sim)})
+                                                    </p>
+                                                    <p className="text-gray-500 mt-1 font-mono text-[10px] truncate">ID: {neighbor.id}</p>
+                                                </div>
+                                                <div className="flex items-center gap-1 ml-2">
+                                                    <button
+                                                        onClick={() => handleVote(neighbor.id, 1)}
+                                                        disabled={isVoting}
+                                                        className={`px-2 py-1 text-xs rounded transition-colors ${voteData?.userVote === 1
+                                                                ? 'bg-green-500 text-white'
+                                                                : 'bg-gray-100 hover:bg-green-100 text-gray-700'
+                                                            } disabled:opacity-50`}
+                                                        title="良いデータ"
+                                                    >
+                                                        👍
+                                                    </button>
+                                                    {voteData && (
+                                                        <span className="text-xs font-semibold text-gray-600 min-w-[20px] text-center">
+                                                            {voteData.score > 0 ? '+' : ''}{voteData.score}
+                                                        </span>
+                                                    )}
+                                                    <button
+                                                        onClick={() => handleVote(neighbor.id, -1)}
+                                                        disabled={isVoting}
+                                                        className={`px-2 py-1 text-xs rounded transition-colors ${voteData?.userVote === -1
+                                                                ? 'bg-red-500 text-white'
+                                                                : 'bg-gray-100 hover:bg-red-100 text-gray-700'
+                                                            } disabled:opacity-50`}
+                                                        title="悪いデータ"
+                                                    >
+                                                        👎
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}

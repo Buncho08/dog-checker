@@ -172,6 +172,20 @@ export const getStats = async (
 	};
 };
 
+export const getVoteScores = async (
+	executor: SqlExecutor = defaultExecutor,
+): Promise<Map<string, number>> => {
+	await ensureInitialized(executor);
+	const result = await executor.query(
+		"SELECT sample_id, COALESCE(SUM(vote), 0) as score FROM sample_votes GROUP BY sample_id",
+	);
+	const scores = new Map<string, number>();
+	result.rows.forEach((row: { sample_id: string; score: number }) => {
+		scores.set(row.sample_id, Number(row.score));
+	});
+	return scores;
+};
+
 export const createDb = (executor?: SqlExecutor) => ({
 	initDb: () => initDb(executor),
 	insertSample: (sample: Omit<DbSample, "createdAt">) =>
@@ -180,6 +194,7 @@ export const createDb = (executor?: SqlExecutor) => ({
 	fetchSamplesByVersion: (version: string) =>
 		fetchSamplesByVersion(version, executor),
 	getStats: () => getStats(executor),
+	getVoteScores: () => getVoteScores(executor),
 	query: (text: string, params?: unknown[]) =>
 		(executor ?? defaultExecutor).query(text, params ?? []),
 });

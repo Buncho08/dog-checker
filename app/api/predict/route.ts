@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createEmbedder } from "../../../lib/embedding/embedder";
-import { fetchSamplesByVersion } from "../../../lib/db";
+import { fetchSamplesByVersion, createDb } from "../../../lib/db";
 import { knn } from "../../../lib/similarity";
 import { config } from "../../../lib/config";
 import { decideLabel } from "../../../lib/utils/decideLabel";
@@ -55,13 +55,17 @@ export async function POST(req: Request) {
 		const { embedding, version } = await embedder.embed(buffer);
 		const samples = await fetchSamplesByVersion(version);
 
+		// 投票スコアを取得
+		const db = createDb();
+		const voteScores = await db.getVoteScores();
+
 		if (samples.length > MAX_SAMPLES_FOR_KNN) {
 			console.warn(
 				`Sample count (${samples.length}) exceeds recommended limit (${MAX_SAMPLES_FOR_KNN})`,
 			);
 		}
 
-		const neighbors = knn(embedding, samples, topK);
+		const neighbors = knn(embedding, samples, topK, voteScores);
 		const decision = decideLabel(neighbors, decisionParams);
 
 		console.info("predict_decision", {
