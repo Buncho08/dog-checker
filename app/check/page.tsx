@@ -87,6 +87,26 @@ export default function CheckPage() {
 	const topNeighbor = useMemo(() => result?.neighbors?.[0], [result]);
 	const labelMap: Record<string, string> = { DOG: "いぬ", NOT_DOG: "いぬじゃない", UNKNOWN: "わからない" };
 	const getDisplayLabel = (label: string) => labelMap[label] || label;
+	const isCustomLabel = (label: string) => !["DOG", "NOT_DOG", "UNKNOWN"].includes(label);
+
+	// カスタムラベルの場合、いぬorいぬじゃないのうち近い方を判定
+	const getNearestStandardLabel = useMemo(() => {
+		if (!result || !isCustomLabel(result.label)) return null;
+
+		const dogNeighbors = result.neighbors.filter(n => n.label === "DOG");
+		const notDogNeighbors = result.neighbors.filter(n => n.label === "NOT_DOG");
+
+		const closestDog = dogNeighbors[0];
+		const closestNotDog = notDogNeighbors[0];
+
+		// simが大きいほど近い（類似度が高い）
+		if (!closestDog && !closestNotDog) return "いぬじゃない";
+		if (!closestDog) return "いぬじゃない";
+		if (!closestNotDog) return "いぬ";
+
+		return closestDog.sim > closestNotDog.sim ? "いぬ" : "いぬじゃない";
+	}, [result]);
+
 	return (
 		<main className="rounded-2xl w-full max-w-xl md:max-w-2xl lg:max-w-3xl min-h-[85vh] bg-amber-50 p-3 md:p-6">
 			{loading && <Loading />}
@@ -146,8 +166,20 @@ export default function CheckPage() {
 			</label>
 
 			{result !== null && (
-				<section className="card flex-col justify-center mt-4 p-3 md:p-4">
-					<h2 className="text-4xl md:text-5xl lg:text-7xl text-center font-extrabold">{getDisplayLabel(result.label)}</h2>
+				<section className="card flex-col justify-center mt-2 p-3 md:p-4">
+					{isCustomLabel(result.label) ? (
+						<div className="text-center">
+							<h2 className="text-4xl md:text-5xl lg:text-7xl font-extrabold">{getNearestStandardLabel}</h2>
+							<p className="text-2xl md:text-3xl lg:text-2xl font-semibold text-gray-600">（{getDisplayLabel(result.label)}）</p>
+						</div>
+					) : result.label === "UNKNOWN" && result.bestLabel ? (
+						<div className="text-center">
+							<h2 className="text-4xl md:text-5xl lg:text-7xl font-extrabold">{getDisplayLabel(result.label)}</h2>
+							<p className="text-2xl md:text-3xl lg:text-2xl font-semibold text-gray-600">（多分、{getDisplayLabel(result.bestLabel)}）</p>
+						</div>
+					) : (
+						<h2 className="text-4xl md:text-5xl lg:text-7xl text-center font-extrabold">{getDisplayLabel(result.label)}</h2>
+					)}
 
 					<div className="flex justify-center items-center gap-3 my-2">
 						<a onClick={() => setModal(true)} className="relative text-xs md:text-sm border-black px-4 md:px-5 py-2 font-semibold text-black after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:bg-black hover:text-white hover:after:h-full focus:ring-2 focus:ring-yellow-300 focus:outline-0" href="#">

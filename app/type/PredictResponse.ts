@@ -8,4 +8,5 @@ export type PredictResponse = {
     sampleCount: number;
     embedderVersion: string;
     params?: Record<string, unknown>;
+    bestLabel?: string;
 };
